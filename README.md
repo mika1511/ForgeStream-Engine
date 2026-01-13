@@ -3,6 +3,8 @@
 
 **ForgeStream Engine** is a high-performance, concurrency-safe manufacturing event processing system built with **Spring Boot**.
 
+ForgeStream Engine is a concurrency-safe backend event processing system built with Spring Boot that ingests large batches of manufacturing telemetry data, performs real-time validation, deduplication, and conflict-safe updates, and exposes analytics APIs for machine and factory-level statistics.
+
 ---
 
 ## 📌 Overview
