@@ -99,7 +99,7 @@ The system follows a clean, decoupled 3-tier architecture. Below is the data flo
 ┌─────────────────────────────────────────────────────────────┐
 │ 2. BUSINESS LOGIC LAYER (EventService)                      │
 │ ├─ @Service + @Transactional(isolation=SERIALIZABLE)        │
-│ ├─ validate() → durationMs (0-21.6Mms), eventTime (<+15min) │
+│ ├─ validate() → durationMs (0 - 6 hr), eventTime(< +15 min) │
 │ ├─ Objects.hash(payload fields) → payloadHash (O(1))        │
 │ ├─ processBatch(){}  → CREATE/DEDUPED/UPDATED/REJECTED      │
 │ └─ Stats calculation → eventsCount, defectsCount, rate,     |
@@ -239,10 +239,10 @@ The system follows a clean, decoupled 3-tier architecture. Below is the data flo
 
 **Endpoint:** `GET /stats/top-defect-lines`
 
-**Parameters:** * `factoryId` (String)
+**Parameters:** `factoryId` (String)
 
-* `from` (ISO-8601 String)
-* `to` (ISO-8601 String)
+* `from` (String)
+* `to` (IString)
 * `limit` (Integer)
 
 **Sample Request:** `GET /stats/top-defect-lines?factoryId=F1&from=2026-01-12T00:00:00Z&to=2026-01-12T23:59:59Z&limit=5`
@@ -337,8 +337,6 @@ Use **H2 (embedded, in-memory / file-based)**.
 * Database enforces correctness under concurrent inserts
 * Simplifies concurrency by letting the DB be the source of truth
 
-Composite keys were rejected because events arrive **out of order** and updates must target the **same logical event**, not time buckets.
-
 ---
 
 ## ⚡ Why Payload Hashing for Deduplication?
@@ -410,8 +408,6 @@ Handling 20+ parallel sensor streams requires a multi-layered approach to preven
 ## Performance Strategy (1,000 events / 1 sec)
 
 To meet the strict sub-second requirement, ForgeStream employs the following optimizations:
-
-* **Payload Hashing ( Comparison)**: Comparing seven different fields (strings, dates, longs) is CPU-intensive. By pre-calculating a `payloadHash` (Integer), we can detect if data has changed in a single clock cycle.
 
 * **Payload Hashing ($O(1)$ Comparison)**: Comparing seven different fields is CPU-intensive. By pre-calculating a payloadHash (Integer), we detect data changes in a single clock cycle ($O(1)$).
 * **Short-Circuit Validation**: We perform validation (Future-dating and Duration checks) before any database connection is opened. This prevents "junk data" from consuming expensive DB resources.
