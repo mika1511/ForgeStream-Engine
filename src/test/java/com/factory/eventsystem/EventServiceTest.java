@@ -12,7 +12,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneOffset; // IMPORTANT
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,19 +32,18 @@ class EventServiceTest {
     @BeforeEach
     void setup() {
         repository.deleteAll();
-        // This prevents NullPointerException when the service calls clock.getZone()
         Mockito.when(clock.getZone()).thenReturn(ZoneOffset.UTC);
         Mockito.when(clock.instant()).thenReturn(Instant.parse("2026-01-13T11:00:00Z"));
     }
 
-    // ========== TEST 1: Identical duplicate eventId → deduped ==========
+    // ========== TEST 1: Identical duplicate eventId ==========
     @Test
     void test1_IdenticalDuplicateEventId_ShouldBeDuplicated() {
-        // Same eventId, same payload, same receivedTime
+
         EventRequest req = new EventRequest(
                 "E1",
-                "2026-01-12T10:00:00Z",  // eventTime
-                "2026-01-12T10:05:00Z",  // receivedTime
+                "2026-01-12T10:00:00Z",
+                "2026-01-12T10:05:00Z",
                 "M1", "L1", "F1",
                 1000L, 5
         );
@@ -95,7 +94,7 @@ class EventServiceTest {
         EventRequest first = new EventRequest(id, "2026-01-12T10:00:00Z", "ignored", "M1", "L1", "F1", 1000L, 5);
         eventService.processBatch(List.of(first));
 
-        // 2. Set Clock to 10:05 (OLDER - simulating a delayed network packet)
+        // 2. Set Clock to 10:05
         Mockito.when(clock.instant()).thenReturn(Instant.parse("2026-01-12T10:05:00Z"));
         EventRequest older = new EventRequest(id, "2026-01-12T10:00:00Z", "ignored", "M1", "L1", "F1", 2000L, 99);
 
@@ -108,7 +107,6 @@ class EventServiceTest {
     // ========== TEST 4: Invalid duration rejected ==========
     @Test
     void test4_InvalidDuration_ShouldBeRejected() {
-        // Duration too long (> 6 hours = 21,600,000 ms)
         EventRequest tooLong = new EventRequest(
                 "E-LONG",
                 "2026-01-12T10:00:00Z",
@@ -142,14 +140,11 @@ class EventServiceTest {
     // ========== TEST 5: Future eventTime rejected ==========
     @Test
     void test5_FutureEventTime_ShouldBeRejected() {
-        // eventTime > 15 minutes in the future
-        // The validation uses fixed time: "2026-01-12T16:00:00Z"
-        // So anything after "2026-01-12T16:15:00Z" should be rejected
 
         EventRequest futureEvent = new EventRequest(
                 "E-FUTURE",
-                "2026-01-14T10:00:00Z",  // Way in the future (Jan 14, next day)
-                "2026-01-12T10:05:00Z",  // receivedTime
+                "2026-01-14T10:00:00Z",  // Way in the future ( next day)
+                "2026-01-12T10:05:00Z",
                 "M1", "L1", "F1",
                 1000L, 0
         );
@@ -170,7 +165,7 @@ class EventServiceTest {
                 "2026-01-12T10:05:00Z",
                 "M1", "L1", "F1",
                 1000L,
-                10  // 10 defects
+                10
         );
 
         // Event with defectCount = -1 (unknown)
@@ -180,7 +175,7 @@ class EventServiceTest {
                 "2026-01-12T10:15:00Z",
                 "M1", "L1", "F1",
                 1000L,
-                -1  // Unknown defects
+                -1
         );
 
         // Event with defectCount = 5
@@ -190,7 +185,7 @@ class EventServiceTest {
                 "2026-01-12T10:25:00Z",
                 "M1", "L1", "F1",
                 1000L,
-                5  // 5 defects
+                5
         );
 
         eventService.processBatch(List.of(withDefects, unknownDefects, moreDefects));
@@ -206,19 +201,19 @@ class EventServiceTest {
         assertEquals(15, stats.defectsCount(), "Only 10 + 5 = 15 defects (the -1 should be ignored)");
     }
 
-    // ========== TEST 7: start/end boundary correctness (inclusive/exclusive) ==========
+    // ========== TEST 7: start/end boundary) ==========
     @Test
     void test7_QueryBoundaries_ShouldBeInclusiveStartExclusiveEnd() {
-        // Event exactly at start boundary (10:00:00) - should be INCLUDED
+        // Event exactly at start boundary - should be INCLUDED
         EventRequest atStart = new EventRequest(
                 "B1",
-                "2026-01-12T10:00:00Z",  // Exactly at start
+                "2026-01-12T10:00:00Z",
                 "2026-01-12T10:01:00Z",
                 "M1", "L1", "F1",
                 1000L, 2
         );
 
-        // Event in the middle (10:30:00) - should be INCLUDED
+        // Event in the middle - should be INCLUDED
         EventRequest inMiddle = new EventRequest(
                 "B2",
                 "2026-01-12T10:30:00Z",
@@ -227,10 +222,10 @@ class EventServiceTest {
                 1000L, 3
         );
 
-        // Event exactly at end boundary (11:00:00) - should be EXCLUDED
+        // Event exactly at end boundary- should be EXCLUDED
         EventRequest atEnd = new EventRequest(
                 "B3",
-                "2026-01-12T11:00:00Z",  // Exactly at end
+                "2026-01-12T11:00:00Z",
                 "2026-01-12T11:01:00Z",
                 "M1", "L1", "F1",
                 1000L, 4
@@ -241,8 +236,8 @@ class EventServiceTest {
         // Query from 10:00 to 11:00 (start inclusive, end exclusive)
         StatsResponse stats = eventService.getMachineStats(
                 "M1",
-                "2026-01-12T10:00:00Z",  // Start (inclusive)
-                "2026-01-12T11:00:00Z"   // End (exclusive)
+                "2026-01-12T10:00:00Z",
+                "2026-01-12T11:00:00Z"
         );
 
         assertEquals(2, stats.eventsCount(), "Should count 2 events (at start and in middle, NOT at end)");
@@ -250,7 +245,7 @@ class EventServiceTest {
         assertEquals(5, stats.defectsCount(), "Should count 2 + 3 = 5 defects (not the 4 from the excluded event)");
     }
 
-    // ========== TEST 8: Thread-safety test ==========
+    // ========== EST 8:Thread-safety ==========
     @Test
     void test8_ConcurrentIngestion_ShouldBeThreadSafe() throws InterruptedException {
         int threadCount = 20;
