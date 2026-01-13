@@ -421,23 +421,23 @@ To meet the strict sub-second requirement, ForgeStream employs the following opt
 Engineering involves trade-offs. Here is how ForgeStream handles specific scenarios:
 
 * **Clock Drift**:
-* *Problem*: A sensor's clock might be slightly ahead of the server.
-* *Solution*: We allow a **15-minute buffer** for future-dated events. Anything beyond that is rejected to prevent skewed "Machine Health" stats.
+  *Problem*: A sensor's clock might be slightly ahead of the server.
+  *Solution*: We allow a **15-minute buffer** for future-dated events. Anything beyond that is rejected to prevent skewed "Machine Health" stats.
 
 
 * **The "Winning" Record (Conflict Resolution)**:
-* *Assumption*: The server's `receivedTime` is the ultimate source of truth for data freshness.
-* *Decision*: If two events with the same ID but different data arrive, the one the server sees **last** wins, provided the data isn't older than the current record. This ensures eventual consistency even if network packets arrive out of order.
+  *Assumption*: The server's `receivedTime` is the ultimate source of truth for data freshness.
+  *Decision*: If two events with the same ID but different data arrive, the one the server sees **last** wins, provided the data isn't older than the current record. This ensures eventual consistency even if network packets arrive out of order.
 
 
 * **Missing Defect Data**:
-* *Handling*: A `defectCount` of `-1` is treated as "Sensor Error/Unknown."
-* *Trade-off*: We still count the event (so `eventsCount` is accurate) but exclude the `-1` from the total sum and averages to avoid poisoning the Defect Rate metrics.
+  *Handling*: A `defectCount` of `-1` is treated as "Sensor Error/Unknown."
+  *Trade-off*: We still count the event (so `eventsCount` is accurate) but exclude the `-1` from the total sum and averages to avoid poisoning the Defect Rate metrics.
 
 
 * **Time Window Boundaries**:
-* *Decision*: We use **Start-Inclusive, End-Exclusive** logic.
-* *Reasoning*: This prevents an event at exactly `11:00:00` from being counted in two different hourly reports.
+  *Decision*: We use **Start-Inclusive, End-Exclusive** logic.
+  *Reasoning*: This prevents an event at exactly `11:00:00` from being counted in two different hourly reports.
 
 
 ## 🧪 Test Coverage (Mandatory – All Implemented)
