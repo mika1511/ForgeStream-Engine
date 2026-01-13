@@ -291,9 +291,8 @@ The system follows a clean, decoupled 3-tier architecture. Below is the data flo
 
 ---
 
-## 🔁 Deduplication & Update Logic (Core Design)
 
-### Why Hashing?
+## Why Hashing?
 
 Instead of comparing every field every time:
 
@@ -393,17 +392,7 @@ Performance cost is acceptable for the target scale.
 
 ---
 
-## 🧠 Why Database Constraints Instead of In-Memory Locks?
-
-* In-memory locks don’t scale across JVMs
-* Don’t survive crashes
-* Add complexity and failure modes
-
-The database provides **crash-safe, distributed correctness** with less code.
-
-
-
-### Thread-Safety & Concurrency
+## Thread-Safety & Concurrency
 
 Handling 20+ parallel sensor streams requires a multi-layered approach to prevent data corruption and race conditions:
 
@@ -418,7 +407,7 @@ Handling 20+ parallel sensor streams requires a multi-layered approach to preven
 
 ---
 
-### Performance Strategy (1,000 events / 1 sec)
+## Performance Strategy (1,000 events / 1 sec)
 
 To meet the strict sub-second requirement, ForgeStream employs the following optimizations:
 
@@ -431,7 +420,7 @@ To meet the strict sub-second requirement, ForgeStream employs the following opt
 
 ---
 
-###  Edge Cases & Assumptions
+## Edge Cases & Assumptions
 
 Engineering involves trade-offs. Here is how ForgeStream handles specific scenarios:
 
