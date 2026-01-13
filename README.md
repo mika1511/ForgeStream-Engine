@@ -3,8 +3,6 @@
 
 **ForgeStream Engine** is a high-performance, concurrency-safe manufacturing event processing system built with **Spring Boot**.
 
-It is designed not only to **work correctly and fast**, but also to clearly demonstrate **engineering judgment** — every major technical decision is intentional, explainable, and defensible in an interview.
-
 ---
 
 ## 📌 Overview
