@@ -5,6 +5,7 @@ import com.factory.eventsystem.dto.EventRequest;
 import com.factory.eventsystem.dto.StatsResponse;
 import com.factory.eventsystem.dto.TopLineResponse;
 import com.factory.eventsystem.model.MachineEvent;
+import com.factory.eventsystem.model.MachineStatus;
 import com.factory.eventsystem.repository.EventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -23,10 +24,13 @@ public class EventService {
 
     private final EventRepository repository;
     private final Clock clock;
+    private final MachineStatusService machineStatusService;
 
-    public EventService(EventRepository repository, Clock clock) {
+
+    public EventService(EventRepository repository, Clock clock, MachineStatusService machineStatusService) {
         this.repository = repository;
         this.clock=clock;
+        this.machineStatusService=machineStatusService;
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
@@ -180,10 +184,6 @@ public class EventService {
                 end
         );
 
-        System.out.println("Querying for " + machineId + " between " + start + " and " + end);
-        System.out.println("Found " + events.size() + " events. IDs: " +
-                events.stream().map(MachineEvent::getEventId).toList());
-
         // 3. Calculate the stats from the filtered list
         long eventsCount = events.size();
 
@@ -199,7 +199,8 @@ public class EventService {
         double avgDefectRate = (windowHours > 0) ? (defectsCount / windowHours) : 0.0;
 
         // 5. Determine Status based on the 2.0 threshold
-        String status = (avgDefectRate < 2.0) ? "Healthy" : "Warning";
+
+        MachineStatus status= machineStatusService.evaluate(avgDefectRate);
 
         return new StatsResponse(
                 machineId,
@@ -208,7 +209,7 @@ public class EventService {
                 eventsCount,
                 defectsCount,
                 Math.round(avgDefectRate * 10.0) / 10.0, // Rounds to 1 decimal place
-                status
+                status.name()
         );
     }
 

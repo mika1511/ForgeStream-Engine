@@ -25,7 +25,7 @@ mvn test -Dtest=EventServiceTest#runBenchmark
 
 | Task | Batch Size | Measured Time | Status |
 | --- | --- |---------------| --- |
-| **Ingest & Process Batch** | 1,000 Events | 702 ms        | **PASSED** |
+| **Ingest & Process Batch** | 1,000 Events | 673 ms        | **PASSED** |
 
 ---
 
